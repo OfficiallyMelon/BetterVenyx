@@ -105,6 +105,12 @@ do
 		return clone
 	end
 
+	function utility:InitMinimize(button, lib)
+		button.Activated:Connect(function()
+			lib:toggle()
+		end)
+	end
+
 	function utility:InitializeKeybind()
 		self.keybinds = {}
 		self.ended = {}
@@ -197,6 +203,8 @@ do
 	function utility:DraggingEnded(callback)
 		self.ended[#self.ended + 1] = callback
 	end
+	
+
 
 end
 
@@ -218,7 +226,7 @@ do
 
 		local container = utility:Create("ScreenGui", {
 			Name = title,
-			Parent = game.CoreGui
+			Parent = game.Players.LocalPlayer.PlayerGui
 		}, {
 			utility:Create("ImageLabel", {
 				Name = "Main",
@@ -279,31 +287,59 @@ do
 					ScaleType = Enum.ScaleType.Slice,
 					SliceCenter = Rect.new(4, 4, 296, 296)
 				}, {
-					utility:Create("TextLabel", { -- title
+					utility:Create("TextLabel", { -- first title
 						Name = "Title",
 						AnchorPoint = Vector2.new(0, 0.5),
 						BackgroundTransparency = 1,
 						Position = UDim2.new(0, 12, 0, 19),
-						Size = UDim2.new(1, -46, 0, 16),
+						Size = UDim2.new(0.5, -46, 0, 16),  -- Adjust size to fit half the width
 						ZIndex = 5,
 						Font = Enum.Font.GothamBold,
 						Text = title,
 						TextColor3 = themes.TextColor,
 						TextSize = 14,
 						TextXAlignment = Enum.TextXAlignment.Left
-					})
+					}),
+					utility:Create("TextButton", { -- second title (minimize button)
+						Name = "Minimize",
+						AnchorPoint = Vector2.new(1, 0.5), -- Adjust anchor point for alignment
+						BackgroundColor3 = Color3.fromRGB(255, 52, 52), -- Use BackgroundColor3 instead of BackgroundColor
+						Position = UDim2.new(1, -12, 0, 19), -- Position it at the right corner of the top bar
+						Size = UDim2.new(0, 30, 0, 16),   -- Adjust size to fit as a button
+						ZIndex = 5,
+						Font = Enum.Font.GothamBold,
+						Text = "-",
+						TextColor3 = Color3.fromRGB(255, 255, 255),
+						TextSize = 16,
+						TextXAlignment = Enum.TextXAlignment.Center -- Center the text for a button look
+					},
+					{
+					utility:Create("UICorner", {
+						Name = "UICorner",
+						CornerRadius = UDim.new(0,2)
+					})})
+
 				})
+
 			})
 		})
 
+		local UI = setmetatable({
+			container = container,
+			pagesContainer = container.Main.Pages.Pages_Container,
+			pages = {}
+		}, library)
+
 		utility:InitializeKeybind()
 		utility:DraggingEnabled(container.Main.TopBar, container.Main)
+		utility:InitMinimize(container.Main.TopBar.Minimize, UI)
 
 		return setmetatable({
 			container = container,
 			pagesContainer = container.Main.Pages.Pages_Container,
 			pages = {}
 		}, library)
+		
 	end
 
 	function library.setTitle(library, title)
@@ -515,12 +551,11 @@ do
 		if self.position then
 			utility:Tween(container, {
 				Size = UDim2.new(0, 511, 0, 428),
-				Position = self.position
 			}, 0.2)
 			wait(0.2)
 
-			utility:Tween(topbar, {Size = UDim2.new(1, 0, 0, 38)}, 0.2)
-			wait(0.2)
+			--utility:Tween(topbar, {Size = UDim2.new(1, 0, 0, 38)}, 0.2)
+			--wait(0.2)
 
 			container.ClipsDescendants = false
 			self.position = nil
@@ -528,12 +563,11 @@ do
 			self.position = container.Position
 			container.ClipsDescendants = true
 
-			utility:Tween(topbar, {Size = UDim2.new(1, 0, 1, 0)}, 0.2)
-			wait(0.2)
+			--utility:Tween(topbar, {Size = UDim2.new(1, 0, 1, 0)}, 0.2)
+			--wait(0.2)
 
 			utility:Tween(container, {
-				Size = UDim2.new(0, 511, 0, 0),
-				Position = self.position + UDim2.new(0, 0, 0, 428)
+				Size = UDim2.new(0, 511, 0, 40),
 			}, 0.2)
 			wait(0.2)
 		end
@@ -707,7 +741,7 @@ do
 	function section:addButton(data)
 		local this = {}
 		this.title = data.title or "nil text"
-        this.callback = data.callback or function() end
+		this.callback = data.callback or function() end
 
 		local button = utility:Create("ImageButton", {
 			Name = "Button",
@@ -763,12 +797,12 @@ do
 		end)
 
 		function this:Update(dataOptions)
-            -- // Overwriting settings
-            for i,v in pairs(dataOptions) do
-                if (module.Options[i] and i ~= "Update") then
-                    module.Options[i] = tostring(v)
-                end
-            end
+			-- // Overwriting settings
+			for i,v in pairs(dataOptions) do
+				if (module.Options[i] and i ~= "Update") then
+					module.Options[i] = tostring(v)
+				end
+			end
 
 			return section:updateButton(module)
 		end
@@ -841,10 +875,10 @@ do
 
 		function this:Update(dataOptions)
 			-- // Overwriting settings
-            for i,v in pairs(dataOptions) do
-                if (module.Options[i] and i ~= "Update") then
-                    module.Options[i] = tostring(v)
-                end
+			for i,v in pairs(dataOptions) do
+				if (module.Options[i] and i ~= "Update") then
+					module.Options[i] = tostring(v)
+				end
 			end
 
 			return section:updateToggle(module)
@@ -964,10 +998,10 @@ do
 
 		function this:Update(dataOptions)
 			-- // Overwriting settings
-            for i,v in pairs(dataOptions) do
-                if (module.Options[i] and i ~= "Update") then
-                    module.Options[i] = tostring(v)
-                end
+			for i,v in pairs(dataOptions) do
+				if (module.Options[i] and i ~= "Update") then
+					module.Options[i] = tostring(v)
+				end
 			end
 
 			return section:updateTextbox(module)
@@ -1059,7 +1093,7 @@ do
 			animate()
 
 			if self.binds[keybind].connection then -- unbind
-			    this.key = Enum.KeyCode.Unknown
+				this.key = Enum.KeyCode.Unknown
 				return self:updateKeybind(module)
 			end
 
@@ -1077,10 +1111,10 @@ do
 
 		function this:Update(dataOptions)
 			-- // Overwriting settings
-            for i,v in pairs(dataOptions) do
-                if (module.Options[i] and i ~= "Update") then
-                    module.Options[i] = tostring(v)
-                end
+			for i,v in pairs(dataOptions) do
+				if (module.Options[i] and i ~= "Update") then
+					module.Options[i] = tostring(v)
+				end
 			end
 
 			return section:updateKeybind(module)
@@ -1610,10 +1644,10 @@ do
 
 		function this:Update(dataOptions)
 			-- // Overwriting settings
-            for i,v in pairs(dataOptions) do
-                if (module.Options[i] and i ~= "Update") then
-                    module.Options[i] = tostring(v)
-                end
+			for i,v in pairs(dataOptions) do
+				if (module.Options[i] and i ~= "Update") then
+					module.Options[i] = tostring(v)
+				end
 			end
 
 			return section:updateColorPicker(module)
@@ -1776,10 +1810,10 @@ do
 
 		function this:Update(dataOptions)
 			-- // Overwriting settings
-            for i,v in pairs(dataOptions) do
-                if (module.Options[i] and i ~= "Update") then
-                    module.Options[i] = tostring(v)
-                end
+			for i,v in pairs(dataOptions) do
+				if (module.Options[i] and i ~= "Update") then
+					module.Options[i] = tostring(v)
+				end
 			end
 
 			return section:updateSlider(module)
@@ -1927,8 +1961,8 @@ do
 		end)
 
 		function this:Update(dataOptions)
-		    -- // Overwriting settings
-            for i,v in pairs(dataOptions) do
+			-- // Overwriting settings
+			for i,v in pairs(dataOptions) do
 				if (i ~= "Update" and module.Options[i]) then
 					-- // Making everything in the list a string
 					if (i == "list") then
@@ -1938,9 +1972,9 @@ do
 					end
 
 					-- // Setting it
-                    module.Options[i] = (i == "list" and v or tostring(v))
+					module.Options[i] = (i == "list" and v or tostring(v))
 				end
-            end
+			end
 
 			return section:updateDropdown(module, {noOpen = dataOptions["list"]})
 		end
